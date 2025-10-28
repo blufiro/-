@@ -1,3 +1,6 @@
+// FIX: Import React to make the React namespace available for CSSProperties.
+import React from 'react';
+
 export interface Word {
   id: number;
   character: string;
@@ -20,6 +23,13 @@ export interface HistoricalScore {
     date: string;
     score: number;
     total: number;
+}
+
+export interface Background {
+  id: string;
+  name: string;
+  cost: number;
+  style: React.CSSProperties;
 }
 
 

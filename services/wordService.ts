@@ -218,5 +218,55 @@ export const wordService = {
             saveToStorage(LAST_WORD_ID_KEY, lastId);
             return { success: true, message: `Successfully imported ${newWords.length} words into "${newLesson.name}".` };
         }
+    },
+
+    importLessons: (importedLessons: unknown): { success: boolean, message: string } => {
+        if (!Array.isArray(importedLessons)) {
+            return { success: false, message: "Import failed: File content is not a valid lesson array." };
+        }
+
+        let lessons = getFromStorage<Lesson[]>(LESSONS_KEY, []);
+        let lastWordId = getFromStorage<number>(LAST_WORD_ID_KEY, 0);
+        let lessonsAdded = 0;
+
+        for (const importedLesson of importedLessons) {
+            // Basic validation for each lesson object
+            if (typeof importedLesson !== 'object' || importedLesson === null || !importedLesson.name || !Array.isArray(importedLesson.words)) {
+                console.warn("Skipping invalid lesson object during import:", importedLesson);
+                continue;
+            }
+
+            // Avoid duplicates by name
+            if (lessons.some(l => l.name === importedLesson.name)) {
+                console.warn(`Skipping lesson with duplicate name: "${importedLesson.name}"`);
+                continue;
+            }
+
+            const wordsWithNewIds = importedLesson.words.map((word: any) => {
+                lastWordId++;
+                return {
+                    id: lastWordId,
+                    character: word.character || '',
+                    pinyin: word.pinyin || ''
+                };
+            });
+
+            const newLesson: Lesson = {
+                id: Date.now() + lessonsAdded, // Simple unique ID
+                name: importedLesson.name,
+                words: wordsWithNewIds
+            };
+
+            lessons.push(newLesson);
+            lessonsAdded++;
+        }
+
+        if (lessonsAdded === 0) {
+            return { success: false, message: "No new lessons were imported. They might be duplicates or invalid." };
+        }
+
+        saveToStorage(LESSONS_KEY, lessons);
+        saveToStorage(LAST_WORD_ID_KEY, lastWordId);
+        return { success: true, message: `Successfully imported ${lessonsAdded} new lesson(s).` };
     }
 };

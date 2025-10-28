@@ -26,7 +26,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ score, totalQuestions, re
       <h2 className="text-3xl font-bold text-blue-600">Test Complete!</h2>
       
       <div className="bg-yellow-100 text-yellow-800 font-bold py-2 px-4 rounded-full">
-        You earned 10 star points! ⭐
+        You earned {score} {score === 1 ? 'point' : 'points'} of screen time! ⭐
       </div>
 
       <div className="w-48 h-48 bg-blue-100 rounded-full flex flex-col items-center justify-center border-8 border-blue-200">

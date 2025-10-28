@@ -21,7 +21,7 @@ const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lesso
   const [currentIndex, setCurrentIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [results, setResults] = useState<TestResult[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [answerStatus, setAnswerStatus] = useState<'correct' | 'incorrect' | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -36,11 +36,11 @@ const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lesso
   }, [lessonIds, onGoHome]);
 
   useEffect(() => {
-    // Automatically focus the input when the word changes
-    if (!isSubmitting) {
+    // Automatically focus the input when the word changes and we are not showing feedback
+    if (!answerStatus) {
       inputRef.current?.focus();
     }
-  }, [currentIndex, isSubmitting]);
+  }, [currentIndex, answerStatus]);
   
   const handleExit = () => {
     if (window.confirm("Are you sure you want to exit? Your progress in this test will be lost.")) {
@@ -50,8 +50,7 @@ const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lesso
   
   // This effect handles the logic for moving to the next word after a delay.
   useEffect(() => {
-    // Don't do anything if we are not in the "submitting" state.
-    if (!isSubmitting) {
+    if (!answerStatus) {
       return;
     }
 
@@ -61,7 +60,7 @@ const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lesso
       if (currentIndex < words.length - 1) {
         setCurrentIndex(currentIndex + 1);
         setInputValue('');
-        setIsSubmitting(false); // Reset submitting state for the next word.
+        setAnswerStatus(null); // Reset for the next word.
       } else {
         // Otherwise, the test is over.
         const score = results.filter(r => r.correct).length;
@@ -71,20 +70,18 @@ const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lesso
 
     // Clean up the timer if the component unmounts or dependencies change.
     return () => clearTimeout(timer);
-  }, [isSubmitting, currentIndex, words, results, onTestComplete]);
+  }, [answerStatus, currentIndex, words, results, onTestComplete]);
 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting || !words[currentIndex]) return;
+    if (answerStatus || !words[currentIndex]) return;
 
     const currentWord = words[currentIndex];
     const isCorrect = normalizePinyin(inputValue) === normalizePinyin(currentWord.pinyin);
     
-    // Set the submitting state and record the result.
-    // The useEffect hook will handle moving to the next word.
-    setIsSubmitting(true);
     setResults(prev => [...prev, { word: currentWord, userInput: inputValue, correct: isCorrect }]);
+    setAnswerStatus(isCorrect ? 'correct' : 'incorrect');
   };
   
   const handleSpeak = async () => {
@@ -99,7 +96,6 @@ const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lesso
   }
 
   const currentWord = words[currentIndex];
-  const lastResult = isSubmitting && results[currentIndex] ? results[currentIndex] : null;
 
   return (
     <div className="flex flex-col items-center p-4 space-y-6 relative">
@@ -125,13 +121,13 @@ const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lesso
 
       <div className="relative w-full h-48 bg-gray-100 rounded-xl flex items-center justify-center mb-4">
         <p className="text-7xl font-bold tracking-widest">{currentWord.character}</p>
-        {isSubmitting && lastResult && (
-            <div className={`absolute inset-0 rounded-xl flex items-center justify-center text-white font-bold text-2xl transition-opacity duration-300 ${lastResult.correct ? 'bg-green-500/90' : 'bg-red-500/90'}`}>
-                {lastResult.correct ? 'Correct! 🎉' : 'Oops!'}
+        {answerStatus && (
+            <div className={`absolute inset-0 rounded-xl flex items-center justify-center text-white font-bold text-2xl transition-opacity duration-300 ${answerStatus === 'correct' ? 'bg-green-500/90' : 'bg-red-500/90'}`}>
+                {answerStatus === 'correct' ? 'Correct! 🎉' : 'Oops!'}
             </div>
         )}
       </div>
-        {isSubmitting && lastResult && !lastResult.correct && (
+        {answerStatus === 'incorrect' && (
             <p className="text-center text-red-600 font-semibold text-lg">
                 Correct answer: <span className="font-mono">{currentWord.pinyin}</span>
             </p>
@@ -143,19 +139,19 @@ const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lesso
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          disabled={isSubmitting}
+          disabled={!!answerStatus}
           placeholder="Type the pinyin here (e.g. ni3 hao3)"
-          className="w-full text-center p-4 border-2 border-gray-300 rounded-lg text-xl focus:border-blue-500 focus:ring-blue-500 transition-colors disabled:bg-gray-200"
+          className="w-full text-center p-4 bg-gray-100 border-2 border-gray-300 rounded-lg text-xl focus:border-blue-500 focus:ring-blue-500 focus:bg-white transition-colors disabled:bg-gray-200"
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck="false"
         />
         <button
           type="submit"
-          disabled={isSubmitting || inputValue.trim() === ''}
+          disabled={!!answerStatus || inputValue.trim() === ''}
           className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-lg shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed transform hover:scale-105 transition-transform duration-200"
         >
-          {isSubmitting ? 'Checking...' : 'Check Answer'}
+          {answerStatus ? 'Checking...' : 'Check Answer'}
         </button>
       </form>
     </div>

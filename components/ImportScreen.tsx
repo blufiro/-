@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { wordService } from '../services/wordService';
 import { Lesson } from '../types';
 
@@ -11,6 +11,7 @@ const ImportScreen: React.FC<ImportScreenProps> = ({ onGoHome, lessonToEdit }) =
     const [lessonName, setLessonName] = useState('');
     const [wordsText, setWordsText] = useState('');
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (lessonToEdit) {
@@ -32,10 +33,68 @@ const ImportScreen: React.FC<ImportScreenProps> = ({ onGoHome, lessonToEdit }) =
             setMessage({ type: 'error', text: result.message });
         }
     };
+
+    const handleFileImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const text = e.target?.result;
+                if (typeof text !== 'string') {
+                    throw new Error("Could not read file content.");
+                }
+                const data = JSON.parse(text);
+                const result = wordService.importLessons(data);
+                if (result.success) {
+                    setMessage({ type: 'success', text: result.message });
+                    setTimeout(() => onGoHome(), 1500);
+                } else {
+                    setMessage({ type: 'error', text: result.message });
+                }
+            } catch (error) {
+                setMessage({ type: 'error', text: `Import failed: Invalid JSON file. ${error instanceof Error ? error.message : ''}` });
+            } finally {
+                // Reset file input so the same file can be selected again
+                if (event.target) {
+                    event.target.value = '';
+                }
+            }
+        };
+        reader.onerror = () => {
+            setMessage({ type: 'error', text: 'Failed to read the file.' });
+        };
+        reader.readAsText(file);
+    };
     
     return (
         <div className="flex flex-col p-4 space-y-6">
             <h2 className="text-3xl font-bold text-blue-600 text-center">{lessonToEdit ? 'Edit Lesson' : 'Import New Lesson'}</h2>
+            
+             {!lessonToEdit && (
+                <div className="border-b pb-4 text-center">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelected}
+                        accept=".json"
+                        className="hidden"
+                    />
+                    <button
+                        onClick={handleFileImportClick}
+                        className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full text-lg shadow-md transition-transform transform hover:scale-105"
+                    >
+                        Import from Backup File
+                    </button>
+                    <p className="text-sm text-gray-500 mt-2">or enter manually below</p>
+                </div>
+            )}
+
             <div className="space-y-4">
                 <div>
                     <label htmlFor="lessonName" className="block text-sm font-medium text-gray-700">Lesson Name</label>
@@ -45,7 +104,7 @@ const ImportScreen: React.FC<ImportScreenProps> = ({ onGoHome, lessonToEdit }) =
                         value={lessonName}
                         onChange={(e) => setLessonName(e.target.value)}
                         placeholder="e.g., Chapter 1"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:bg-white sm:text-sm transition-colors"
                     />
                 </div>
                 <div>
@@ -56,7 +115,7 @@ const ImportScreen: React.FC<ImportScreenProps> = ({ onGoHome, lessonToEdit }) =
                         onChange={(e) => setWordsText(e.target.value)}
                         rows={10}
                         placeholder="Enter words, one per line, in the format:&#10;你好,ni3 hao3&#10;谢谢,xie4 xie"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                        className="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:bg-white sm:text-sm font-mono transition-colors"
                         autoCapitalize="off"
                         autoCorrect="off"
                         spellCheck="false"
