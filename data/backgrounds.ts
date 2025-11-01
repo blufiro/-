@@ -31,7 +31,9 @@ export const backgrounds: Background[] = [
     name: 'Fiery Hot',
     cost: 50,
     style: {
-      background: 'linear-gradient(to right, #ff8177 0%, #ff8c7f 21%, #f99185 52%, #cf556c 78%, #b12a5b 100%)',
+      backgroundColor: '#3f3f46', // A mid-dark grey (zinc-700)
+      // A more muted grey background with a subtle, deep red glow and slightly more visible cracks.
+      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3e%3cpath d='M 20 5 L 25 15 L 15 25 L 20 35 L 30 45' stroke='rgba(239, 68, 68, 0.2)' stroke-width='1.5' fill='none'/%3e%3cpath d='M 40 10 L 35 20 L 45 30 L 30 40' stroke='rgba(249, 115, 22, 0.15)' stroke-width='1' fill='none' /%3e%3c/svg%3e"), radial-gradient(ellipse at 70% 90%, #7f1d1d 0%, #3f3f46 70%)`,
     }
   },
   {
