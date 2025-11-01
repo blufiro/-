@@ -210,53 +210,90 @@ export const wordService = {
         }
     },
 
-    importLessons: (importedLessons: unknown): { success: boolean, message: string } => {
+    analyzeImportData: (importedLessons: unknown): { success: boolean, message: string, newLessons: Lesson[], duplicates: Lesson[] } => {
         if (!Array.isArray(importedLessons)) {
-            return { success: false, message: "Import failed: File content is not a valid lesson array." };
+            return { success: false, message: "Import failed: File content is not a valid lesson array.", newLessons: [], duplicates: [] };
         }
-
+    
+        const currentLessons = getFromStorage<Lesson[]>(LESSONS_KEY, []);
+        const newLessons: Lesson[] = [];
+        const duplicates: Lesson[] = [];
+    
+        for (const importedLesson of importedLessons) {
+            if (typeof importedLesson !== 'object' || importedLesson === null || !importedLesson.name || !Array.isArray(importedLesson.words)) {
+                console.warn("Skipping invalid lesson object during import analysis:", importedLesson);
+                continue;
+            }
+    
+            const lessonWithMinimalValidation = {
+                name: importedLesson.name,
+                words: importedLesson.words.filter((w: any) => w.character && w.pinyin)
+            } as Omit<Lesson, 'id'>;
+    
+            if (lessonWithMinimalValidation.words.length === 0) continue;
+    
+            if (currentLessons.some(l => l.name === lessonWithMinimalValidation.name)) {
+                duplicates.push(lessonWithMinimalValidation as Lesson);
+            } else {
+                newLessons.push(lessonWithMinimalValidation as Lesson);
+            }
+        }
+        
+        if (newLessons.length === 0 && duplicates.length === 0) {
+            return { success: false, message: "No new or overlapping lessons found. The file might be empty, invalid, or contain only existing data.", newLessons: [], duplicates: []};
+        }
+    
+        return { success: true, message: "Analysis complete.", newLessons, duplicates };
+    },
+    
+    saveImportedLessons: (options: { newLessonsToSave: Lesson[], lessonsToOverwrite: Lesson[] }): { success: boolean, message: string } => {
+        const { newLessonsToSave, lessonsToOverwrite } = options;
         let lessons = getFromStorage<Lesson[]>(LESSONS_KEY, []);
         let lastWordId = getFromStorage<number>(LAST_WORD_ID_KEY, 0);
-        let lessonsAdded = 0;
-
-        for (const importedLesson of importedLessons) {
-            // Basic validation for each lesson object
-            if (typeof importedLesson !== 'object' || importedLesson === null || !importedLesson.name || !Array.isArray(importedLesson.words)) {
-                console.warn("Skipping invalid lesson object during import:", importedLesson);
-                continue;
+    
+        let addedCount = 0;
+        let overwrittenCount = 0;
+    
+        // Overwrite existing lessons
+        for (const lessonToOverwrite of lessonsToOverwrite) {
+            const index = lessons.findIndex(l => l.name === lessonToOverwrite.name);
+            if (index !== -1) {
+                const wordsWithIds = lessonToOverwrite.words.map((word: any) => {
+                    lastWordId++;
+                    return { id: lastWordId, character: word.character || '', pinyin: word.pinyin || '' };
+                });
+                lessons[index].words = wordsWithIds;
+                overwrittenCount++;
             }
-
-            // Avoid duplicates by name
-            if (lessons.some(l => l.name === importedLesson.name)) {
-                console.warn(`Skipping lesson with duplicate name: "${importedLesson.name}"`);
-                continue;
-            }
-
-            const wordsWithNewIds = importedLesson.words.map((word: any) => {
-                lastWordId++;
-                return {
-                    id: lastWordId,
-                    character: word.character || '',
-                    pinyin: word.pinyin || ''
-                };
-            });
-
-            const newLesson: Lesson = {
-                id: Date.now() + lessonsAdded, // Simple unique ID
-                name: importedLesson.name,
-                words: wordsWithNewIds
-            };
-
-            lessons.push(newLesson);
-            lessonsAdded++;
         }
-
-        if (lessonsAdded === 0) {
+    
+        // Add new lessons
+        for (const newLesson of newLessonsToSave) {
+            if (!lessons.some(l => l.name === newLesson.name)) {
+                const wordsWithIds = newLesson.words.map((word: any) => {
+                    lastWordId++;
+                    return { id: lastWordId, character: word.character || '', pinyin: word.pinyin || '' };
+                });
+                lessons.push({
+                    id: Date.now() + addedCount,
+                    name: newLesson.name,
+                    words: wordsWithIds
+                });
+                addedCount++;
+            }
+        }
+    
+        if (addedCount === 0 && overwrittenCount === 0) {
             return { success: false, message: "No new lessons were imported. They might be duplicates or invalid." };
         }
-
+    
         saveToStorage(LESSONS_KEY, lessons);
         saveToStorage(LAST_WORD_ID_KEY, lastWordId);
-        return { success: true, message: `Successfully imported ${lessonsAdded} new lesson(s).` };
+    
+        const messageParts = [];
+        if(addedCount > 0) messageParts.push(`Successfully imported ${addedCount} new lesson(s).`);
+        if(overwrittenCount > 0) messageParts.push(`Successfully overwrote ${overwrittenCount} lesson(s).`);
+    
+        return { success: true, message: messageParts.join(' ') };
     }
 };
