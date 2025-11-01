@@ -49,4 +49,27 @@ export const backgrounds: Background[] = [
       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3e%3cpath d='M 50,10 L 10,100 L 25,100 L 25,120 L 75,120 L 75,100 L 90,100 Z' fill='rgba(255,255,255,0.07)' /%3e%3cpath d='M 150,40 L 110,130 L 125,130 L 125,150 L 175,150 L 175,130 L 190,130 Z' fill='rgba(255,255,255,0.05)' /%3e%3c/svg%3e"), linear-gradient(to top, #0f2027, #203a43, #2c5364)`,
     }
   },
+  {
+    id: 'space',
+    name: 'Outer Space',
+    cost: 50,
+    style: {
+      backgroundColor: '#0d1b2a',
+      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3e%3ccircle cx='50' cy='50' r='1.5' fill='rgba(255,255,255,0.7)'/%3e%3ccircle cx='250' cy='80' r='1' fill='rgba(255,255,255,0.9)'/%3e%3ccircle cx='120' cy='200' r='2' fill='rgba(255,255,255,0.6)'/%3e%3ccircle cx='180' cy='150' r='10' fill='rgba(173, 216, 230, 0.5)'/%3e%3cellipse cx='180' cy='150' rx='16' ry='5' stroke='rgba(255, 255, 255, 0.4)' stroke-width='1' fill='none'/%3e%3cpath d='M 40 250 L 50 245 L 60 255 L 55 260 Z' fill='rgba(200,200,200,0.3)'/%3e%3c/svg%3e"), linear-gradient(to bottom, #000000, #0d1b2a)`,
+      backgroundRepeat: 'repeat, no-repeat',
+      backgroundPosition: '0 0, center',
+      backgroundSize: '300px 300px, cover',
+    }
+  },
+  {
+    id: 'station',
+    name: 'Space Station Interior',
+    cost: 50,
+    style: {
+      backgroundColor: '#F9FAFB', // very light grey fallback
+      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='350' height='350'%3e%3crect width='350' height='350' fill='%23F9FAFB'/%3e%3crect x='30' y='50' width='80' height='120' fill='%23F3F4F6' rx='5' stroke='%23E5E7EB' stroke-width='1.5' /%3e%3crect x='40' y='60' width='60' height='30' fill='%23E5E7EB' rx='2' /%3e%3ccircle cx='45' cy='105' r='3' fill='%23D1D5DB' /%3e%3ccircle cx='60' cy='105' r='3' fill='%23D1D5DB' /%3e%3ccircle cx='75' cy='105' r='3' fill='%23D1D5DB' /%3e%3crect x='40' y='120' width='40' height='3' fill='%23D1D5DB' /%3e%3crect x='40' y='130' width='40' height='3' fill='%23D1D5DB' /%3e%3crect x='180' y='200' width='140' height='90' fill='%23F3F4F6' rx='5' stroke='%23E5E7EB' stroke-width='1.5'/%3e%3crect x='190' y='210' width='120' height='4' fill='%23D1D5DB' /%3e%3crect x='190' y='220' width='120' height='4' fill='%23D1D5DB' /%3e%3crect x='190' y='230' width='120' height='4' fill='%23D1D5DB' /%3e%3crect x='280' y='250' width='20' height='20' fill='%23E5E7EB' rx='2'/%3e%3ccircle cx='290' cy='260' r='4' fill='%23D1D5DB'/%3e%3crect x='250' y='40' width='40' height='15' fill='%23E5E7EB' rx='3' /%3e%3ccircle cx='80' cy='250' r='10' stroke='%23E5E7EB' stroke-width='2' fill='none' /%3e%3ccircle cx='80' cy='250' r='4' fill='%23E5E7EB' /%3e%3c/svg%3e")`,
+      backgroundSize: '350px 350px',
+      backgroundRepeat: 'repeat',
+    }
+  },
 ];
