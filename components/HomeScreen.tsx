@@ -1,5 +1,5 @@
 import React from 'react';
-import { StarIcon } from './icons/StarIcon';
+import { CoinIcon } from './icons/CoinIcon';
 import { ImportIcon } from './icons/ImportIcon';
 import { PencilIcon } from './icons/PencilIcon';
 import { TrashIcon } from './icons/TrashIcon';
@@ -42,7 +42,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImpor
   };
   
   return (
-    <div className="text-center flex flex-col items-center justify-center h-full space-y-6">
+    <div className="relative text-center flex flex-col items-center justify-center h-full space-y-6">
+      <span className="absolute top-0 right-0 text-xs text-gray-400 p-2">v0.1</span>
       <div>
         <h1 className="text-4xl md:text-5xl font-bold text-blue-600">拼音天天练</h1>
         <p className="text-lg text-gray-600">Pinyin Daily Practice</p>
@@ -50,9 +51,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImpor
       
       <div className="flex items-center justify-center gap-4">
         <div className="bg-yellow-100 border-2 border-yellow-300 rounded-full pl-6 pr-4 py-3 flex items-center space-x-3 shadow-md">
-          <StarIcon className="w-8 h-8 text-yellow-500" />
+          <CoinIcon className="w-8 h-8 text-yellow-500" />
           <span className="text-2xl font-bold text-yellow-700">{screenTime}</span>
-          <span className="text-lg text-yellow-600">Screen Time</span>
+          <span className="text-lg text-yellow-600">Points</span>
         </div>
         <button
           onClick={onGoToShop}

@@ -7,20 +7,6 @@ const INITIAL_WORDS: Omit<Word, 'id'>[] = [
     { character: '再见', pinyin: 'zai4 jian4' },
     { character: '老师', pinyin: 'lao3 shi1' },
     { character: '学生', pinyin: 'xue2 sheng' },
-    { character: '是', pinyin: 'shi4' },
-    { character: '不是', pinyin: 'bu2 shi4' },
-    { character: '我', pinyin: 'wo3' },
-    { character: '你', pinyin: 'ni3' },
-    { character: '他', pinyin: 'ta1' },
-    { character: '她', pinyin: 'ta1' },
-    { character: '我们', pinyin: 'wo3 men' },
-    { character: '你们', pinyin: 'ni3 men' },
-    { character: '他们', pinyin: 'ta1 men' },
-    { character: '早上好', pinyin: 'zao3 shang hao' },
-    { character: '晚上好', pinyin: 'wan3 shang hao' },
-    { character: '对不起', pinyin: 'dui4 bu qi3' },
-    { character: '没关系', pinyin: 'mei2 guan1 xi' },
-    { character: '什么', pinyin: 'shen2 me' },
 ];
 
 const LESSONS_KEY = 'lessons';
@@ -87,34 +73,38 @@ export const wordService = {
     },
 
     getDailyTestWords: (lessonIds: number[]): Word[] => {
+        const TEST_SIZE = 5;
+        const MISTAKE_COUNT = 2; // Prioritize up to 2 mistakes
+
         const allLessons = getFromStorage<Lesson[]>(LESSONS_KEY, []);
         const selectedLessons = allLessons.filter(lesson => lessonIds.includes(lesson.id));
         const wordPool = getAllWordsFromLessons(selectedLessons);
 
         if (wordPool.length === 0) return [];
+        
+        const testSize = Math.min(TEST_SIZE, wordPool.length);
 
         const mistakes = getFromStorage<Record<number, number>>(MISTAKES_KEY, {});
-        const seenWordIds = getFromStorage<number[]>(SEEN_WORDS_KEY, []);
         
-        const sortedMistakeIds = Object.keys(mistakes)
-            .map(id => parseInt(id))
-            .sort((a, b) => mistakes[b] - mistakes[a]);
+        // Get all words from the pool that are marked as mistakes
+        const mistakeWords = wordPool.filter(word => mistakes[word.id] > 0);
+        const shuffledMistakes = shuffleArray(mistakeWords);
 
-        const mistakesToRevise = wordPool
-            .filter(word => sortedMistakeIds.includes(word.id))
-            .sort((a, b) => sortedMistakeIds.indexOf(a.id) - sortedMistakeIds.indexOf(b.id))
-            .slice(0, 5);
+        // Select some mistakes to revise, up to MISTAKE_COUNT
+        const revisionMistakes = shuffledMistakes.slice(0, MISTAKE_COUNT);
+        const revisionMistakeIds = new Set(revisionMistakes.map(w => w.id));
+
+        // Get other words from the pool that are not in our revision list
+        const otherWords = wordPool.filter(word => !revisionMistakeIds.has(word.id));
+        const shuffledOtherWords = shuffleArray(otherWords);
+
+        // Fill the rest of the test with other words
+        const remainingCount = testSize - revisionMistakes.length;
+        const randomWords = shuffledOtherWords.slice(0, remainingCount);
         
-        const newWords = wordPool.filter(word => !seenWordIds.includes(word.id));
-        const shuffledNewWords = shuffleArray(newWords).slice(0, 5);
-
-        const combinedList = [...mistakesToRevise, ...shuffledNewWords];
-        
-        if (combinedList.length === 0) {
-            return shuffleArray(wordPool).slice(0, 10);
-        }
-
-        return shuffleArray(combinedList);
+        // Combine and shuffle for the final test list
+        const testWords = [...revisionMistakes, ...randomWords];
+        return shuffleArray(testWords);
     },
     
     saveTestResults: (results: TestResult[]) => {

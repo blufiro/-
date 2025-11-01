@@ -39,7 +39,8 @@ export const backgrounds: Background[] = [
     name: 'Dark Forest',
     cost: 50,
     style: {
-      background: 'linear-gradient(to top, #0f2027, #203a43, #2c5364)',
+      backgroundColor: '#0f2027',
+      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3e%3cpath d='M 50,10 L 10,100 L 25,100 L 25,120 L 75,120 L 75,100 L 90,100 Z' fill='rgba(255,255,255,0.07)' /%3e%3cpath d='M 150,40 L 110,130 L 125,130 L 125,150 L 175,150 L 175,130 L 190,130 Z' fill='rgba(255,255,255,0.05)' /%3e%3c/svg%3e"), linear-gradient(to top, #0f2027, #203a43, #2c5364)`,
     }
   },
 ];
