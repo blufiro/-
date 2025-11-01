@@ -47,6 +47,31 @@ const App: React.FC = () => {
     }
   }, [view, refreshData]);
 
+  // Secret debug key press to add points
+  useEffect(() => {
+    const pressedKeys = new Set<string>();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      pressedKeys.add(event.key.toLowerCase());
+      if (pressedKeys.has('q') && pressedKeys.has('p')) {
+        setScreenTime(prevTime => prevTime + 50);
+        pressedKeys.clear(); // Prevents continuous adding
+      }
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      pressedKeys.delete(event.key.toLowerCase());
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [setScreenTime]);
+
   const handleStartTestRequest = () => {
     setLessonSelectionOpen(true);
   };

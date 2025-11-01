@@ -23,7 +23,11 @@ export const backgrounds: Background[] = [
     name: 'Icy Cool',
     cost: 50,
     style: {
-      background: 'linear-gradient(to top, #a1c4fd 0%, #c2e9fb 100%)',
+      // Layered background: falling snow (repeat) and base gradient.
+      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3e%3ccircle cx='20' cy='30' r='3' fill='rgba(255,255,255,0.9)'/%3e%3ccircle cx='100' cy='80' r='2' fill='rgba(255,255,255,0.8)'/%3e%3ccircle cx='160' cy='20' r='1.5' fill='rgba(255,255,255,0.9)'/%3e%3ccircle cx='60' cy='140' r='2.5' fill='rgba(255,255,255,0.75)'/%3e%3ccircle cx='180' cy='180' r='2' fill='rgba(255,255,255,0.85)'/%3e%3ccircle cx='50' cy='90' r='1' fill='rgba(255,255,255,0.9)'/%3e%3c/svg%3e"), linear-gradient(to top, #a1c4fd 0%, #c2e9fb 100%)`,
+      backgroundRepeat: 'repeat, no-repeat',
+      backgroundPosition: '0 0, center',
+      backgroundSize: '200px 200px, cover',
     }
   },
   {
