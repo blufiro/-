@@ -3,14 +3,14 @@ import { Lesson } from '../types';
 
 interface TestLessonSelectionModalProps {
   lessons: Lesson[];
-  onStart: (selectedIds: number[]) => void;
+  onStart: (selectedIds: string[]) => void;
   onClose: () => void;
 }
 
 const TestLessonSelectionModal: React.FC<TestLessonSelectionModalProps> = ({ lessons, onStart, onClose }) => {
-  const [selectedLessonIds, setSelectedLessonIds] = useState<Record<number, boolean>>({});
+  const [selectedLessonIds, setSelectedLessonIds] = useState<Record<string, boolean>>({});
 
-  const handleToggle = (lessonId: number) => {
+  const handleToggle = (lessonId: string) => {
     setSelectedLessonIds(prev => ({
       ...prev,
       [lessonId]: !prev[lessonId],
@@ -19,8 +19,7 @@ const TestLessonSelectionModal: React.FC<TestLessonSelectionModalProps> = ({ les
 
   const handleStart = () => {
     const ids = Object.keys(selectedLessonIds)
-      .filter(id => selectedLessonIds[Number(id)])
-      .map(Number);
+      .filter(id => selectedLessonIds[id]);
     if (ids.length > 0) {
       onStart(ids);
     }

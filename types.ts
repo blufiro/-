@@ -14,7 +14,7 @@ export interface TestResult {
 }
 
 export interface Lesson {
-  id: number;
+  id: string;
   name: string;
   words: Word[];
 }

@@ -8,7 +8,7 @@ import { XMarkIcon } from './icons/XMarkIcon';
 interface TestScreenProps {
   onTestComplete: (results: TestResult[], score: number) => void;
   onGoHome: () => void;
-  lessonIds: number[];
+  lessonIds: string[];
 }
 
 // Helper to normalize pinyin input

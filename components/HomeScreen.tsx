@@ -17,7 +17,7 @@ interface HomeScreenProps {
   topMistakes: Word[];
   lessons: Lesson[];
   onEditLesson: (lesson: Lesson) => void;
-  onDeleteLesson: (lessonId: number) => void;
+  onDeleteLesson: (lessonId: string) => void;
 }
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImport, onGoToShop, screenTime, historicalScores, topMistakes, lessons, onEditLesson, onDeleteLesson }) => {

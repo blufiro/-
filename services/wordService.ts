@@ -53,7 +53,7 @@ export const wordService = {
                 return { ...word, id: lastId };
             });
             const defaultLesson: Lesson = {
-                id: 1,
+                id: "1",
                 name: "Default Lesson",
                 words: initialWordsWithIds
             };
@@ -66,13 +66,13 @@ export const wordService = {
         return getFromStorage<Lesson[]>(LESSONS_KEY, []);
     },
 
-    deleteLesson: (lessonId: number): void => {
+    deleteLesson: (lessonId: string): void => {
         let lessons = getFromStorage<Lesson[]>(LESSONS_KEY, []);
         lessons = lessons.filter(lesson => lesson.id !== lessonId);
         saveToStorage(LESSONS_KEY, lessons);
     },
 
-    getDailyTestWords: (lessonIds: number[]): Word[] => {
+    getDailyTestWords: (lessonIds: string[]): Word[] => {
         const TEST_SIZE = 5;
         const MISTAKE_COUNT = 2; // Prioritize up to 2 mistakes
 
@@ -148,7 +148,7 @@ export const wordService = {
             .slice(0, count);
     },
 
-    saveLesson: (lessonName: string, wordsText: string, lessonIdToUpdate?: number): { success: boolean, message: string } => {
+    saveLesson: (lessonName: string, wordsText: string, lessonIdToUpdate?: string): { success: boolean, message: string } => {
         if (!lessonName.trim()) {
             return { success: false, message: "Lesson name cannot be empty." };
         }
@@ -198,7 +198,7 @@ export const wordService = {
             });
 
             const newLesson: Lesson = {
-                id: Date.now(), // Simple unique ID
+                id: Date.now().toString(), // Simple unique ID
                 name: lessonName.trim(),
                 words: wordsWithIds,
             };
@@ -275,7 +275,7 @@ export const wordService = {
                     return { id: lastWordId, character: word.character || '', pinyin: word.pinyin || '' };
                 });
                 lessons.push({
-                    id: Date.now() + addedCount,
+                    id: (Date.now() + addedCount).toString(),
                     name: newLesson.name,
                     words: wordsWithIds
                 });

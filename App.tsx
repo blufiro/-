@@ -22,7 +22,7 @@ const App: React.FC = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLessonSelectionOpen, setLessonSelectionOpen] = useState(false);
   const [lessonToEdit, setLessonToEdit] = useState<Lesson | null>(null);
-  const [selectedLessonIds, setSelectedLessonIds] = useState<number[]>([]);
+  const [selectedLessonIds, setSelectedLessonIds] = useState<string[]>([]);
 
   const [purchasedBackgroundIds, setPurchasedBackgroundIds] = useLocalStorage<string[]>('purchasedBackgrounds', [defaultBackground.id]);
   const [activeBackgroundId, setActiveBackgroundId] = useLocalStorage<string>('activeBackground', defaultBackground.id);
@@ -76,7 +76,7 @@ const App: React.FC = () => {
     setLessonSelectionOpen(true);
   };
   
-  const handleTestStart = (ids: number[]) => {
+  const handleTestStart = (ids: string[]) => {
     if (ids.length === 0) return;
     setSelectedLessonIds(ids);
     setLessonSelectionOpen(false);
@@ -139,7 +139,7 @@ const App: React.FC = () => {
     setView('import');
   };
 
-  const handleDeleteLesson = (lessonId: number) => {
+  const handleDeleteLesson = (lessonId: string) => {
     if (window.confirm("Are you sure you want to delete this lesson? This cannot be undone.")) {
       wordService.deleteLesson(lessonId);
       refreshData();
