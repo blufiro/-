@@ -90,15 +90,20 @@ const App: React.FC = () => {
     wordService.saveTestResults(results);
     setScreenTime(prevTime => prevTime + correctAnswers);
     
+    const namesOfLessons = lessons
+        .filter(lesson => selectedLessonIds.includes(lesson.id))
+        .map(lesson => lesson.name);
+
     const newScore: HistoricalScore = {
         date: new Date().toLocaleDateString(),
         score: correctAnswers,
         total: results.length,
+        lessonNames: namesOfLessons,
     };
     setHistoricalScores(prevScores => [newScore, ...prevScores].slice(0, 10)); // Keep last 10 scores
     
     setView('results');
-  }, [setScreenTime, setHistoricalScores]);
+  }, [setScreenTime, setHistoricalScores, lessons, selectedLessonIds]);
 
   const goHome = () => {
     setLessonToEdit(null);

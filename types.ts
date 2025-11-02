@@ -23,6 +23,7 @@ export interface HistoricalScore {
     date: string;
     score: number;
     total: number;
+    lessonNames: string[];
 }
 
 export interface Background {

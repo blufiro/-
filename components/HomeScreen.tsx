@@ -115,16 +115,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImpor
         )}
       </div>
 
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+      <div className="w-full grid grid-cols-1 md:grid-cols-5 gap-6 pt-4">
         {/* Top Mistakes */}
-        <div className="bg-red-50 p-4 rounded-lg shadow-inner">
+        <div className="bg-red-50 p-4 rounded-lg shadow-inner md:col-span-2">
           <h3 className="text-lg font-bold mb-2 text-red-700">Top Mistakes</h3>
           {topMistakes.length > 0 ? (
             <ul className="space-y-1 text-left max-h-40 overflow-y-auto pr-2">
               {topMistakes.map(word => (
                 <li key={word.id} className="flex justify-between items-center p-1 bg-white rounded">
                   <span className="text-xl font-semibold">{word.character}</span>
-                  <span className="font-mono text-gray-600">{word.pinyin}</span>
+                  <span className="font-mono text-gray-600 truncate pl-2">{word.pinyin}</span>
                 </li>
               ))}
             </ul>
@@ -134,14 +134,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImpor
         </div>
 
         {/* Recent Scores */}
-        <div className="bg-blue-50 p-4 rounded-lg shadow-inner">
+        <div className="bg-blue-50 p-4 rounded-lg shadow-inner md:col-span-3">
           <h3 className="text-lg font-bold mb-2 text-blue-700">Recent Scores</h3>
           {historicalScores.length > 0 ? (
             <ul className="space-y-1 text-left max-h-40 overflow-y-auto pr-2">
               {historicalScores.map((s, i) => (
-                <li key={i} className="flex justify-between items-center p-1 bg-white rounded">
+                <li key={i} className="flex justify-between items-center p-1 bg-white rounded gap-2">
                   <span className="text-sm text-gray-500">{s.date}</span>
-                  <span className="font-bold text-blue-600">{s.score} / {s.total}</span>
+                  <span className="text-sm text-gray-600 text-center flex-1 truncate" title={s.lessonNames?.join(', ')}>
+                    {s.lessonNames?.join(', ') || '...'}
+                  </span>
+                  <span className="font-bold text-blue-600 whitespace-nowrap">{s.score} / {s.total}</span>
                 </li>
               ))}
             </ul>
