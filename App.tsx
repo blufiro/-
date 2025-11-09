@@ -83,6 +83,10 @@ const App: React.FC = () => {
     setView('test');
   }
 
+  const handleStartSingleLessonTest = (lessonId: string) => {
+    handleTestStart([lessonId]);
+  };
+
   const finishTest = useCallback((results: TestResult[], finalScore: number) => {
     const correctAnswers = results.filter(r => r.correct).length;
     setLastTestResults(results);
@@ -159,6 +163,7 @@ const App: React.FC = () => {
                         onEditLesson={handleEditLesson}
                         onDeleteLesson={handleDeleteLesson}
                         onGoToShop={goToShop}
+                        onStartSingleLessonTest={handleStartSingleLessonTest}
                     />;
         case 'test':
             return <TestScreen onTestComplete={finishTest} onGoHome={goHome} lessonIds={selectedLessonIds}/>;
@@ -187,6 +192,7 @@ const App: React.FC = () => {
                         onEditLesson={handleEditLesson}
                         onDeleteLesson={handleDeleteLesson}
                         onGoToShop={goToShop}
+                        onStartSingleLessonTest={handleStartSingleLessonTest}
                    />;
     }
   }

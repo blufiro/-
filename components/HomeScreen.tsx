@@ -7,6 +7,7 @@ import { DownloadIcon } from './icons/DownloadIcon';
 import { ShopIcon } from './icons/ShopIcon';
 import { HistoricalScore, Word, Lesson } from '../types';
 import { wordService } from '../services/wordService';
+import { PlayIcon } from './icons/PlayIcon';
 
 interface HomeScreenProps {
   onStartTestRequest: () => void;
@@ -18,9 +19,10 @@ interface HomeScreenProps {
   lessons: Lesson[];
   onEditLesson: (lesson: Lesson) => void;
   onDeleteLesson: (lessonId: string) => void;
+  onStartSingleLessonTest: (lessonId: string) => void;
 }
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImport, onGoToShop, screenTime, historicalScores, topMistakes, lessons, onEditLesson, onDeleteLesson }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImport, onGoToShop, screenTime, historicalScores, topMistakes, lessons, onEditLesson, onDeleteLesson, onStartSingleLessonTest }) => {
   
   const handleExport = () => {
     const allLessons = wordService.getLessons();
@@ -95,6 +97,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImpor
                     </button>
                     <button onClick={() => onDeleteLesson(lesson.id)} className="p-2 text-red-500 hover:text-red-700" aria-label={`Delete ${lesson.name}`}>
                       <TrashIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => onStartSingleLessonTest(lesson.id)} className="p-2 text-green-500 hover:text-green-700" aria-label={`Start test for ${lesson.name}`}>
+                      <PlayIcon className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
