@@ -2,7 +2,7 @@ import React from 'react';
 import { Background } from '../types';
 import { HomeIcon } from './icons/HomeIcon';
 import { CheckCircleIcon } from './icons/CheckCircleIcon';
-import { StarIcon } from './icons/StarIcon';
+import { CoinIcon } from './icons/CoinIcon';
 
 
 interface ShopScreenProps {
@@ -21,7 +21,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ onGoHome, screenTime, backgroun
             <div className="flex justify-between items-center">
                 <h2 className="text-3xl font-bold text-blue-600">Background Shop</h2>
                 <div className="bg-yellow-100 border-2 border-yellow-300 rounded-full px-4 py-2 flex items-center space-x-2 shadow-md">
-                    <StarIcon className="w-6 h-6 text-yellow-500" />
+                    <CoinIcon className="w-6 h-6 text-yellow-500" />
                     <span className="text-xl font-bold text-yellow-700">{screenTime}</span>
                 </div>
             </div>
@@ -54,7 +54,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ onGoHome, screenTime, backgroun
                                     disabled={!canAfford}
                                     className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                                 >
-                                    <StarIcon className="w-5 h-5"/>
+                                    <CoinIcon className="w-5 h-5"/>
                                     <span>{bg.cost}</span>
                                 </button>
                             )}

@@ -1,12 +1,12 @@
 import { Word, TestResult, Lesson } from '../types';
 
 const INITIAL_WORDS: Omit<Word, 'id'>[] = [
-    { character: '你好', pinyin: 'ni3 hao3' },
-    { character: '谢谢', pinyin: 'xie4 xie' },
-    { character: '不客气', pinyin: 'bu2 ke4 qi' },
-    { character: '再见', pinyin: 'zai4 jian4' },
-    { character: '老师', pinyin: 'lao3 shi1' },
-    { character: '学生', pinyin: 'xue2 sheng' },
+    { character: '你', pinyin: 'ni3' },
+    { character: '好', pinyin: 'hao3' },
+    { character: '我', pinyin: 'wo3' },
+    { character: '是', pinyin: 'shi4' },
+    { character: '不', pinyin: 'bu4' },
+    { character: '人', pinyin: 'ren2' },
 ];
 
 const LESSONS_KEY = 'lessons';
