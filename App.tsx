@@ -32,8 +32,9 @@ const App: React.FC = () => {
 
 
   const refreshData = useCallback(() => {
+    const allLessons = wordService.getAllLessons();
+    setLessons(allLessons);
     setTopMistakes(wordService.getTopMistakes(5));
-    setLessons(wordService.getLessons());
   }, []);
   
   useEffect(() => {

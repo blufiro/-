@@ -2,7 +2,7 @@
 import React from 'react';
 
 export interface Word {
-  id: number;
+  id: string;
   character: string;
   pinyin: string; // e.g., "ni3 hao3"
 }
@@ -17,6 +17,8 @@ export interface Lesson {
   id: string;
   name: string;
   words: Word[];
+  isPredefined?: boolean;
+  level?: 'p1' | 'p2' | 'p3' | 'p4';
 }
 
 export interface HistoricalScore {

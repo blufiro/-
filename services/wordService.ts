@@ -1,4 +1,9 @@
 import { Word, TestResult, Lesson } from '../types';
+import { p1Lessons } from '../data/p1Lessons';
+import { p2Lessons } from '../data/p2Lessons';
+import { p3Lessons } from '../data/p3Lessons';
+import { p4Lessons } from '../data/p4Lessons';
+
 
 const INITIAL_WORDS: Omit<Word, 'id'>[] = [
     { character: '你', pinyin: 'ni3' },
@@ -10,10 +15,11 @@ const INITIAL_WORDS: Omit<Word, 'id'>[] = [
 ];
 
 const LESSONS_KEY = 'lessons';
-const MISTAKES_KEY = 'mistakes'; // Stored as Record<number, number> { wordId: count }
+const MISTAKES_KEY = 'mistakes'; // Stored as Record<string, number> { wordId: count }
 const SEEN_WORDS_KEY = 'seenWords';
 const LAST_WORD_ID_KEY = 'lastWordId';
 
+const PREDEFINED_LESSONS: Lesson[] = [...p1Lessons, ...p2Lessons, ...p3Lessons, ...p4Lessons];
 
 const shuffleArray = <T,>(array: T[]): T[] => {
     return [...array].sort(() => Math.random() - 0.5);
@@ -50,7 +56,7 @@ export const wordService = {
             let lastId = 0;
             const initialWordsWithIds = INITIAL_WORDS.map((word, index) => {
                 lastId = index + 1;
-                return { ...word, id: lastId };
+                return { ...word, id: lastId.toString() };
             });
             const defaultLesson: Lesson = {
                 id: "1",
@@ -62,8 +68,16 @@ export const wordService = {
         }
     },
     
-    getLessons: (): Lesson[] => {
+    getCustomLessons: (): Lesson[] => {
         return getFromStorage<Lesson[]>(LESSONS_KEY, []);
+    },
+
+    getPredefinedLessons: (): Lesson[] => {
+        return PREDEFINED_LESSONS;
+    },
+
+    getAllLessons: (): Lesson[] => {
+        return [...wordService.getPredefinedLessons(), ...wordService.getCustomLessons()];
     },
 
     deleteLesson: (lessonId: string): void => {
@@ -76,7 +90,7 @@ export const wordService = {
         const TEST_SIZE = 5;
         const MISTAKE_COUNT = 2; // Prioritize up to 2 mistakes
 
-        const allLessons = getFromStorage<Lesson[]>(LESSONS_KEY, []);
+        const allLessons = wordService.getAllLessons();
         const selectedLessons = allLessons.filter(lesson => lessonIds.includes(lesson.id));
         const wordPool = getAllWordsFromLessons(selectedLessons);
 
@@ -84,7 +98,7 @@ export const wordService = {
         
         const testSize = Math.min(TEST_SIZE, wordPool.length);
 
-        const mistakes = getFromStorage<Record<number, number>>(MISTAKES_KEY, {});
+        const mistakes = getFromStorage<Record<string, number>>(MISTAKES_KEY, {});
         
         // Get all words from the pool that are marked as mistakes
         const mistakeWords = wordPool.filter(word => mistakes[word.id] > 0);
@@ -108,8 +122,8 @@ export const wordService = {
     },
     
     saveTestResults: (results: TestResult[]) => {
-        let mistakes = getFromStorage<Record<number, number>>(MISTAKES_KEY, {});
-        let seenWordIds = getFromStorage<number[]>(SEEN_WORDS_KEY, []);
+        let mistakes = getFromStorage<Record<string, number>>(MISTAKES_KEY, {});
+        let seenWordIds = getFromStorage<string[]>(SEEN_WORDS_KEY, []);
         
         results.forEach(result => {
             const wordId = result.word.id;
@@ -135,11 +149,10 @@ export const wordService = {
     },
 
     getTopMistakes: (count: number): Word[] => {
-        const allWords = getAllWordsFromLessons(getFromStorage<Lesson[]>(LESSONS_KEY, []));
-        const mistakes = getFromStorage<Record<number, number>>(MISTAKES_KEY, {});
+        const allWords = getAllWordsFromLessons(wordService.getAllLessons());
+        const mistakes = getFromStorage<Record<string, number>>(MISTAKES_KEY, {});
         
         const sortedMistakeIds = Object.keys(mistakes)
-            .map(id => parseInt(id))
             .sort((a, b) => mistakes[b] - mistakes[a]);
         
         return allWords
@@ -183,7 +196,7 @@ export const wordService = {
                 const existing = existingWords.find(ew => ew.character === word.character && ew.pinyin === word.pinyin);
                 if (existing) return existing;
                 lastId++;
-                return { ...word, id: lastId };
+                return { ...word, id: lastId.toString() };
             });
 
             lessons[lessonIndex].name = lessonName.trim();
@@ -194,7 +207,7 @@ export const wordService = {
         } else { // Creating new lesson
             const wordsWithIds = newWords.map(word => {
                 lastId++;
-                return { ...word, id: lastId };
+                return { ...word, id: lastId.toString() };
             });
 
             const newLesson: Lesson = {
@@ -260,7 +273,7 @@ export const wordService = {
             if (index !== -1) {
                 const wordsWithIds = lessonToOverwrite.words.map((word: any) => {
                     lastWordId++;
-                    return { id: lastWordId, character: word.character || '', pinyin: word.pinyin || '' };
+                    return { id: lastWordId.toString(), character: word.character || '', pinyin: word.pinyin || '' };
                 });
                 lessons[index].words = wordsWithIds;
                 overwrittenCount++;
@@ -272,7 +285,7 @@ export const wordService = {
             if (!lessons.some(l => l.name === newLesson.name)) {
                 const wordsWithIds = newLesson.words.map((word: any) => {
                     lastWordId++;
-                    return { id: lastWordId, character: word.character || '', pinyin: word.pinyin || '' };
+                    return { id: lastWordId.toString(), character: word.character || '', pinyin: word.pinyin || '' };
                 });
                 lessons.push({
                     id: (Date.now() + addedCount).toString(),

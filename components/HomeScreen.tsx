@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { CoinIcon } from './icons/CoinIcon';
 import { ImportIcon } from './icons/ImportIcon';
 import { PencilIcon } from './icons/PencilIcon';
@@ -22,12 +22,27 @@ interface HomeScreenProps {
   onStartSingleLessonTest: (lessonId: string) => void;
 }
 
+const TABS = [
+    { id: 'my', label: 'My Lessons' },
+    { id: 'p1', label: 'P1' },
+    { id: 'p2', label: 'P2' },
+];
+
 const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImport, onGoToShop, screenTime, historicalScores, topMistakes, lessons, onEditLesson, onDeleteLesson, onStartSingleLessonTest }) => {
+  const [activeTab, setActiveTab] = useState('my');
+
+  const lessonsToDisplay = useMemo(() => {
+    if (activeTab === 'my') {
+      return lessons.filter(l => !l.isPredefined);
+    }
+    return lessons.filter(l => l.level === activeTab);
+  }, [activeTab, lessons]);
+
   
   const handleExport = () => {
-    const allLessons = wordService.getLessons();
+    const allLessons = wordService.getCustomLessons();
     if (allLessons.length === 0) {
-      alert("There are no lessons to export.");
+      alert("There are no custom lessons to export.");
       return;
     }
     const jsonString = JSON.stringify(allLessons, null, 2);
@@ -45,7 +60,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImpor
   
   return (
     <div className="relative text-center flex flex-col items-center justify-center h-full space-y-6">
-      <span className="absolute top-0 right-0 text-xs text-gray-400 p-2">v0.2</span>
+      <span className="absolute top-0 right-0 text-xs text-gray-400 p-2">v0.3</span>
       <div>
         <h1 className="text-4xl md:text-5xl font-bold text-blue-600">拼音天天练</h1>
         <p className="text-lg text-gray-600">Pinyin Daily Practice</p>
@@ -66,59 +81,82 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImpor
         </button>
       </div>
       
-      <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <button
-          onClick={onGoToImport}
-          className="w-full flex items-center justify-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-full text-lg shadow-lg transform hover:scale-105 transition-transform duration-200"
-        >
-          <ImportIcon className="w-6 h-6" />
-          Import New Lesson
-        </button>
-        <button
-          onClick={onStartTestRequest}
-          className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-full text-lg shadow-lg transform hover:scale-105 transition-transform duration-200"
-        >
-          Start Daily Test
-        </button>
+      <button
+        onClick={onStartTestRequest}
+        className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-full text-lg shadow-lg transform hover:scale-105 transition-transform duration-200"
+      >
+        Start Daily Test (Mix & Match)
+      </button>
+
+      {/* Lessons Section */}
+      <div className="w-full bg-gray-50 p-4 rounded-lg shadow-inner">
+        <div className="flex border-b border-gray-200">
+            {TABS.map(tab => (
+                <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`-mb-px py-2 px-4 text-sm font-semibold transition-colors duration-200 ${
+                        activeTab === tab.id
+                        ? 'border-b-2 border-blue-500 text-blue-600'
+                        : 'text-gray-500 hover:text-blue-500'
+                    }`}
+                >
+                    {tab.label}
+                </button>
+            ))}
+        </div>
+
+        <div className="pt-4">
+            {lessonsToDisplay.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                {lessonsToDisplay.map(lesson => (
+                    <div key={lesson.id} className="flex justify-between items-center p-2 bg-white rounded-lg border">
+                    <span className="font-semibold text-gray-800 truncate" title={lesson.name}>{lesson.name} ({lesson.words.length} words)</span>
+                    <div className="flex items-center space-x-2">
+                        {activeTab === 'my' && (
+                            <>
+                                <button onClick={() => onEditLesson(lesson)} className="p-2 text-blue-500 hover:text-blue-700" aria-label={`Edit ${lesson.name}`}>
+                                    <PencilIcon className="w-5 h-5" />
+                                </button>
+                                <button onClick={() => onDeleteLesson(lesson.id)} className="p-2 text-red-500 hover:text-red-700" aria-label={`Delete ${lesson.name}`}>
+                                    <TrashIcon className="w-5 h-5" />
+                                </button>
+                            </>
+                        )}
+                        <button onClick={() => onStartSingleLessonTest(lesson.id)} className="p-2 text-green-500 hover:text-green-700" aria-label={`Start test for ${lesson.name}`}>
+                        <PlayIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+                    </div>
+                ))}
+                </div>
+            ) : (
+                <p className="text-gray-500 italic py-4">
+                    {activeTab === 'my' ? "You have no custom lessons. Import one to get started!" : "No lessons available for this level yet."}
+                </p>
+            )}
+
+            {activeTab === 'my' && (
+                <div className="flex justify-center items-center gap-6 text-center mt-4 pt-3 border-t">
+                    <button
+                        onClick={onGoToImport}
+                        className="flex items-center justify-center gap-2 text-sm text-purple-600 hover:text-purple-800 hover:underline"
+                    >
+                        <ImportIcon className="w-4 h-4" />
+                        Import New Lesson
+                    </button>
+                    <button 
+                        onClick={handleExport}
+                        className="flex items-center justify-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                        <DownloadIcon className="w-4 h-4" />
+                        Export My Lessons
+                    </button>
+                </div>
+            )}
+        </div>
       </div>
 
-      {/* My Lessons Section */}
-      <div className="w-full bg-gray-50 p-4 rounded-lg shadow-inner">
-        <h3 className="text-xl font-bold mb-3 text-gray-700">My Lessons</h3>
-        {lessons.length > 0 ? (
-          <>
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-              {lessons.map(lesson => (
-                <div key={lesson.id} className="flex justify-between items-center p-2 bg-white rounded-lg border">
-                  <span className="font-semibold text-gray-800 truncate" title={lesson.name}>{lesson.name} ({lesson.words.length} words)</span>
-                  <div className="flex items-center space-x-2">
-                    <button onClick={() => onEditLesson(lesson)} className="p-2 text-blue-500 hover:text-blue-700" aria-label={`Edit ${lesson.name}`}>
-                      <PencilIcon className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => onDeleteLesson(lesson.id)} className="p-2 text-red-500 hover:text-red-700" aria-label={`Delete ${lesson.name}`}>
-                      <TrashIcon className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => onStartSingleLessonTest(lesson.id)} className="p-2 text-green-500 hover:text-green-700" aria-label={`Start test for ${lesson.name}`}>
-                      <PlayIcon className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-             <div className="text-center mt-3">
-              <button 
-                onClick={handleExport}
-                className="flex items-center justify-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline mx-auto"
-              >
-                <DownloadIcon className="w-4 h-4" />
-                Export All Lessons to File
-              </button>
-            </div>
-          </>
-        ) : (
-           <p className="text-gray-500 italic">You have no custom lessons. Import one to get started!</p>
-        )}
-      </div>
 
       <div className="w-full grid grid-cols-1 md:grid-cols-5 gap-6 pt-4">
         {/* Top Mistakes */}
