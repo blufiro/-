@@ -144,21 +144,51 @@ export const wordService = {
             }
         });
         
+        const MISTAKES_LIMIT = 1000;
+        let mistakeEntries = Object.entries(mistakes);
+        if (mistakeEntries.length > MISTAKES_LIMIT) {
+            // Sort by count, ascending. Lowest counts will be at the start.
+            mistakeEntries.sort(([, countA], [, countB]) => countA - countB);
+            const toRemoveCount = mistakeEntries.length - MISTAKES_LIMIT;
+            const mistakesToRemove = mistakeEntries.slice(0, toRemoveCount);
+            for (const [id] of mistakesToRemove) {
+                delete mistakes[id];
+            }
+        }
+
         saveToStorage(MISTAKES_KEY, mistakes);
         saveToStorage(SEEN_WORDS_KEY, seenWordIds);
     },
 
-    getTopMistakes: (count: number): Word[] => {
+    getTopMistakes: (count: number): (Word & { mistakeCount: number })[] => {
         const allWords = getAllWordsFromLessons(wordService.getAllLessons());
         const mistakes = getFromStorage<Record<string, number>>(MISTAKES_KEY, {});
         
         const sortedMistakeIds = Object.keys(mistakes)
             .sort((a, b) => mistakes[b] - mistakes[a]);
         
-        return allWords
-            .filter(word => sortedMistakeIds.includes(word.id))
-            .sort((a, b) => sortedMistakeIds.indexOf(a.id) - sortedMistakeIds.indexOf(b.id))
+        const wordMap = new Map(allWords.map(w => [w.id, w]));
+
+        return sortedMistakeIds
+            .map(id => {
+                const word = wordMap.get(id);
+                if (!word) return null;
+                return { ...word, mistakeCount: mistakes[id] };
+            })
+            .filter((w): w is Word & { mistakeCount: number } => w !== null)
             .slice(0, count);
+    },
+
+    getMistakeWordsForTest: (): Word[] => {
+        const mistakes = getFromStorage<Record<string, number>>(MISTAKES_KEY, {});
+        const mistakeIds = Object.keys(mistakes);
+        if (mistakeIds.length === 0) return [];
+        
+        const allWords = getAllWordsFromLessons(wordService.getAllLessons());
+        
+        const mistakeWords = allWords.filter(word => mistakeIds.includes(word.id));
+        
+        return shuffleArray(mistakeWords);
     },
 
     saveLesson: (lessonName: string, wordsText: string, lessonIdToUpdate?: string): { success: boolean, message: string } => {

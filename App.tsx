@@ -18,11 +18,13 @@ const App: React.FC = () => {
   const [score, setScore] = useState(0);
   const [screenTime, setScreenTime] = useLocalStorage<number>('screenTime', 0);
   const [historicalScores, setHistoricalScores] = useLocalStorage<HistoricalScore[]>('historicalScores', []);
-  const [topMistakes, setTopMistakes] = useState<Word[]>([]);
+  const [topMistakes, setTopMistakes] = useState<(Word & { mistakeCount: number })[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLessonSelectionOpen, setLessonSelectionOpen] = useState(false);
   const [lessonToEdit, setLessonToEdit] = useState<Lesson | null>(null);
-  const [selectedLessonIds, setSelectedLessonIds] = useState<string[]>([]);
+  
+  const [testWords, setTestWords] = useState<Word[]>([]);
+  const [lastTestConfig, setLastTestConfig] = useState<{type: 'lessons', ids: string[]} | {type: 'mistakes'} | null>(null);
 
   const [purchasedBackgroundIds, setPurchasedBackgroundIds] = useLocalStorage<string[]>('purchasedBackgrounds', [defaultBackground.id]);
   const [activeBackgroundId, setActiveBackgroundId] = useLocalStorage<string>('activeBackground', defaultBackground.id);
@@ -34,7 +36,7 @@ const App: React.FC = () => {
   const refreshData = useCallback(() => {
     const allLessons = wordService.getAllLessons();
     setLessons(allLessons);
-    setTopMistakes(wordService.getTopMistakes(5));
+    setTopMistakes(wordService.getTopMistakes(10)); // Display top 10 on home
   }, []);
   
   useEffect(() => {
@@ -79,13 +81,30 @@ const App: React.FC = () => {
   
   const handleTestStart = (ids: string[]) => {
     if (ids.length === 0) return;
-    setSelectedLessonIds(ids);
+    const words = wordService.getDailyTestWords(ids);
+    if (words.length === 0) {
+      alert("No words available for the test in the selected lessons.");
+      return;
+    }
+    setTestWords(words);
+    setLastTestConfig({ type: 'lessons', ids });
     setLessonSelectionOpen(false);
     setView('test');
   }
 
   const handleStartSingleLessonTest = (lessonId: string) => {
     handleTestStart([lessonId]);
+  };
+
+  const handleStartTopMistakesTest = () => {
+    const mistakeWords = wordService.getMistakeWordsForTest();
+    if (mistakeWords.length === 0) {
+      alert("You have no mistakes to review. Great job!");
+      return;
+    }
+    setTestWords(mistakeWords);
+    setLastTestConfig({ type: 'mistakes' });
+    setView('test');
   };
 
   const finishTest = useCallback((results: TestResult[], finalScore: number) => {
@@ -95,20 +114,38 @@ const App: React.FC = () => {
     wordService.saveTestResults(results);
     setScreenTime(prevTime => prevTime + correctAnswers);
     
-    const namesOfLessons = lessons
-        .filter(lesson => selectedLessonIds.includes(lesson.id))
-        .map(lesson => lesson.name);
+    let lessonNames: string[] = [];
+    if (lastTestConfig?.type === 'lessons') {
+        lessonNames = lessons
+            .filter(lesson => lastTestConfig.ids.includes(lesson.id))
+            .map(lesson => lesson.name);
+    } else if (lastTestConfig?.type === 'mistakes') {
+        lessonNames = ["Mistakes Revision"];
+    }
+
 
     const newScore: HistoricalScore = {
         date: new Date().toLocaleDateString(),
         score: correctAnswers,
         total: results.length,
-        lessonNames: namesOfLessons,
+        lessonNames: lessonNames,
     };
     setHistoricalScores(prevScores => [newScore, ...prevScores].slice(0, 10)); // Keep last 10 scores
     
     setView('results');
-  }, [setScreenTime, setHistoricalScores, lessons, selectedLessonIds]);
+  }, [setScreenTime, setHistoricalScores, lessons, lastTestConfig]);
+
+  const handleRetry = () => {
+    if (!lastTestConfig) {
+        goHome();
+        return;
+    }
+    if (lastTestConfig.type === 'lessons') {
+        handleTestStart(lastTestConfig.ids);
+    } else {
+        handleStartTopMistakesTest();
+    }
+  };
 
   const goHome = () => {
     setLessonToEdit(null);
@@ -165,11 +202,12 @@ const App: React.FC = () => {
                         onDeleteLesson={handleDeleteLesson}
                         onGoToShop={goToShop}
                         onStartSingleLessonTest={handleStartSingleLessonTest}
+                        onStartTopMistakesTest={handleStartTopMistakesTest}
                     />;
         case 'test':
-            return <TestScreen onTestComplete={finishTest} onGoHome={goHome} lessonIds={selectedLessonIds}/>;
+            return <TestScreen onTestComplete={finishTest} onGoHome={goHome} words={testWords}/>;
         case 'results':
-            return <ResultsScreen score={score} totalQuestions={lastTestResults.length} results={lastTestResults} onRetry={() => handleTestStart(selectedLessonIds)} onHome={goHome} />;
+            return <ResultsScreen score={score} totalQuestions={lastTestResults.length} results={lastTestResults} onRetry={handleRetry} onHome={goHome} />;
         case 'import':
             return <ImportScreen onGoHome={goHome} lessonToEdit={lessonToEdit} />;
         case 'shop':
@@ -194,6 +232,7 @@ const App: React.FC = () => {
                         onDeleteLesson={handleDeleteLesson}
                         onGoToShop={goToShop}
                         onStartSingleLessonTest={handleStartSingleLessonTest}
+                        onStartTopMistakesTest={handleStartTopMistakesTest}
                    />;
     }
   }

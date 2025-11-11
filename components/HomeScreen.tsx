@@ -15,11 +15,12 @@ interface HomeScreenProps {
   onGoToShop: () => void;
   screenTime: number;
   historicalScores: HistoricalScore[];
-  topMistakes: Word[];
+  topMistakes: (Word & { mistakeCount: number })[];
   lessons: Lesson[];
   onEditLesson: (lesson: Lesson) => void;
   onDeleteLesson: (lessonId: string) => void;
   onStartSingleLessonTest: (lessonId: string) => void;
+  onStartTopMistakesTest: () => void;
 }
 
 const TABS = [
@@ -28,7 +29,7 @@ const TABS = [
     { id: 'p2', label: 'P2' },
 ];
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImport, onGoToShop, screenTime, historicalScores, topMistakes, lessons, onEditLesson, onDeleteLesson, onStartSingleLessonTest }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImport, onGoToShop, screenTime, historicalScores, topMistakes, lessons, onEditLesson, onDeleteLesson, onStartSingleLessonTest, onStartTopMistakesTest }) => {
   const [activeTab, setActiveTab] = useState('my');
 
   const lessonsToDisplay = useMemo(() => {
@@ -60,7 +61,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImpor
   
   return (
     <div className="relative text-center flex flex-col items-center justify-center h-full space-y-6">
-      <span className="absolute top-0 right-0 text-xs text-gray-400 p-2">v0.3</span>
+      <span className="absolute top-0 right-0 text-xs text-gray-400 p-2">v0.4</span>
       <div>
         <h1 className="text-4xl md:text-5xl font-bold text-blue-600">拼音天天练</h1>
         <p className="text-lg text-gray-600">Pinyin Daily Practice</p>
@@ -161,13 +162,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImpor
       <div className="w-full grid grid-cols-1 md:grid-cols-5 gap-6 pt-4">
         {/* Top Mistakes */}
         <div className="bg-red-50 p-4 rounded-lg shadow-inner md:col-span-2">
-          <h3 className="text-lg font-bold mb-2 text-red-700">Top Mistakes</h3>
+            <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-bold text-red-700">Top Mistakes</h3>
+                {topMistakes.length > 0 && (
+                <button onClick={onStartTopMistakesTest} className="p-2 text-green-500 hover:text-green-700" aria-label="Start test for Top Mistakes">
+                    <PlayIcon className="w-5 h-5" />
+                </button>
+                )}
+            </div>
           {topMistakes.length > 0 ? (
             <ul className="space-y-1 text-left max-h-40 overflow-y-auto pr-2">
               {topMistakes.map(word => (
-                <li key={word.id} className="flex justify-between items-center p-1 bg-white rounded">
-                  <span className="text-xl font-semibold">{word.character}</span>
-                  <span className="font-mono text-gray-600 truncate pl-2">{word.pinyin}</span>
+                <li key={word.id} className="flex justify-between items-center p-1 bg-white rounded gap-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="text-xl font-semibold">{word.character}</span>
+                        <span className="font-mono text-gray-600 truncate">{word.pinyin}</span>
+                    </div>
+                    <span className="text-xs font-bold text-red-500 bg-red-100 rounded-full px-2 py-0.5 whitespace-nowrap">{word.mistakeCount} wrong</span>
                 </li>
               ))}
             </ul>

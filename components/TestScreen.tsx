@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Word, TestResult } from '../types';
-import { wordService } from '../services/wordService';
 import { geminiService } from '../services/geminiService';
 import { SpeakerIcon } from './icons/SpeakerIcon';
 import { XMarkIcon } from './icons/XMarkIcon';
@@ -8,7 +7,7 @@ import { XMarkIcon } from './icons/XMarkIcon';
 interface TestScreenProps {
   onTestComplete: (results: TestResult[], score: number) => void;
   onGoHome: () => void;
-  lessonIds: string[];
+  words: Word[];
 }
 
 // Helper to normalize pinyin input
@@ -16,8 +15,7 @@ const normalizePinyin = (pinyin: string): string => {
     return pinyin.toLowerCase().replace(/\s+/g, ' ').trim();
 };
 
-const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lessonIds }) => {
-  const [words, setWords] = useState<Word[]>([]);
+const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, words }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [inputValue, setInputValue] = useState('');
   const [results, setResults] = useState<TestResult[]>([]);
@@ -26,14 +24,12 @@ const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lesso
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const testWords = wordService.getDailyTestWords(lessonIds);
-    if (testWords.length === 0) {
-        alert("No words available for the test in the selected lessons.");
+    if (words.length === 0) {
+        // This case should ideally be handled before navigating to this screen
+        alert("No words were provided for the test.");
         onGoHome();
-    } else {
-        setWords(testWords);
     }
-  }, [lessonIds, onGoHome]);
+  }, [words, onGoHome]);
 
   useEffect(() => {
     // Automatically focus the input when the word changes and we are not showing feedback
@@ -62,7 +58,7 @@ const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lesso
         setInputValue('');
         setAnswerStatus(null); // Reset for the next word.
       } else {
-        // Otherwise, the test is over.
+        // Otherwise, the test is over. The `results` state already has all the answers.
         const score = results.filter(r => r.correct).length;
         onTestComplete(results, score);
       }
@@ -91,7 +87,7 @@ const TestScreen: React.FC<TestScreenProps> = ({ onTestComplete, onGoHome, lesso
     setIsSpeaking(false);
   };
 
-  if (words.length === 0) {
+  if (words.length === 0 || !words[currentIndex]) {
     return <div className="text-center p-8">Loading your words...</div>;
   }
 
