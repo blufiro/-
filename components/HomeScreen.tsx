@@ -27,6 +27,8 @@ const TABS = [
     { id: 'my', label: 'My Lessons' },
     { id: 'p1', label: 'P1' },
     { id: 'p2', label: 'P2' },
+    { id: 'p3', label: 'P3' },
+    { id: 'p4', label: 'P4' },
 ];
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImport, onGoToShop, screenTime, historicalScores, topMistakes, lessons, onEditLesson, onDeleteLesson, onStartSingleLessonTest, onStartTopMistakesTest }) => {
