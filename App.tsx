@@ -29,6 +29,8 @@ const App: React.FC = () => {
   const [purchasedBackgroundIds, setPurchasedBackgroundIds] = useLocalStorage<string[]>('purchasedBackgrounds', [defaultBackground.id]);
   const [activeBackgroundId, setActiveBackgroundId] = useLocalStorage<string>('activeBackground', defaultBackground.id);
   const [allBackgrounds] = useState<Background[]>([defaultBackground, ...backgrounds]);
+
+  const [testSize, setTestSize] = useLocalStorage<number>('testSize', 5);
           
   const activeBackground = allBackgrounds.find(bg => bg.id === activeBackgroundId) || defaultBackground;
 
@@ -36,7 +38,7 @@ const App: React.FC = () => {
   const refreshData = useCallback(() => {
     const allLessons = wordService.getAllLessons();
     setLessons(allLessons);
-    setTopMistakes(wordService.getTopMistakes(10)); // Display top 10 on home
+    setTopMistakes(wordService.getTopMistakes(1000)); // Display up to 1000 mistakes on home
   }, []);
   
   useEffect(() => {
@@ -81,7 +83,7 @@ const App: React.FC = () => {
   
   const handleTestStart = (ids: string[]) => {
     if (ids.length === 0) return;
-    const words = wordService.getDailyTestWords(ids);
+    const words = wordService.getDailyTestWords(ids, testSize);
     if (words.length === 0) {
       alert("No words available for the test in the selected lessons.");
       return;
@@ -97,7 +99,7 @@ const App: React.FC = () => {
   };
 
   const handleStartTopMistakesTest = () => {
-    const mistakeWords = wordService.getMistakeWordsForTest();
+    const mistakeWords = wordService.getMistakeWordsForTest(testSize);
     if (mistakeWords.length === 0) {
       alert("You have no mistakes to review. Great job!");
       return;
@@ -203,6 +205,8 @@ const App: React.FC = () => {
                         onGoToShop={goToShop}
                         onStartSingleLessonTest={handleStartSingleLessonTest}
                         onStartTopMistakesTest={handleStartTopMistakesTest}
+                        testSize={testSize}
+                        onSetTestSize={setTestSize}
                     />;
         case 'test':
             return <TestScreen onTestComplete={finishTest} onGoHome={goHome} words={testWords}/>;
@@ -233,6 +237,8 @@ const App: React.FC = () => {
                         onGoToShop={goToShop}
                         onStartSingleLessonTest={handleStartSingleLessonTest}
                         onStartTopMistakesTest={handleStartTopMistakesTest}
+                        testSize={testSize}
+                        onSetTestSize={setTestSize}
                    />;
     }
   }

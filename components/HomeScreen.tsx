@@ -21,6 +21,8 @@ interface HomeScreenProps {
   onDeleteLesson: (lessonId: string) => void;
   onStartSingleLessonTest: (lessonId: string) => void;
   onStartTopMistakesTest: () => void;
+  testSize: number;
+  onSetTestSize: (size: number) => void;
 }
 
 const TABS = [
@@ -31,7 +33,21 @@ const TABS = [
     { id: 'p4', label: 'P4' },
 ];
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImport, onGoToShop, screenTime, historicalScores, topMistakes, lessons, onEditLesson, onDeleteLesson, onStartSingleLessonTest, onStartTopMistakesTest }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ 
+    onStartTestRequest, 
+    onGoToImport, 
+    onGoToShop, 
+    screenTime, 
+    historicalScores, 
+    topMistakes, 
+    lessons, 
+    onEditLesson, 
+    onDeleteLesson, 
+    onStartSingleLessonTest, 
+    onStartTopMistakesTest,
+    testSize,
+    onSetTestSize
+}) => {
   const [activeTab, setActiveTab] = useState('my');
 
   const lessonsToDisplay = useMemo(() => {
@@ -69,19 +85,39 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStartTestRequest, onGoToImpor
         <p className="text-lg text-gray-600">Pinyin Daily Practice</p>
       </div>
       
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex flex-col md:flex-row items-center justify-center gap-4">
         <div className="bg-yellow-100 border-2 border-yellow-300 rounded-full pl-6 pr-4 py-3 flex items-center space-x-3 shadow-md">
           <CoinIcon className="w-8 h-8 text-yellow-500" />
           <span className="text-2xl font-bold text-yellow-700">{screenTime}</span>
           <span className="text-lg text-yellow-600">Points</span>
         </div>
-        <button
-          onClick={onGoToShop}
-          className="bg-pink-500 hover:bg-pink-600 text-white rounded-full p-4 shadow-lg transform hover:scale-110 transition-transform duration-200"
-          aria-label="Open Shop"
-        >
-          <ShopIcon className="w-8 h-8"/>
-        </button>
+        
+        <div className="flex items-center gap-4">
+            <div className="bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-md flex items-center border border-gray-200">
+                <span className="text-xs font-bold text-gray-400 px-2 uppercase tracking-wider">Words</span>
+                {[5, 10, 20].map(size => (
+                    <button
+                        key={size}
+                        onClick={() => onSetTestSize(size)}
+                        className={`w-8 h-8 rounded-full text-sm font-bold transition-all duration-200 ${
+                            testSize === size 
+                            ? 'bg-blue-500 text-white shadow-sm scale-110' 
+                            : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'
+                        }`}
+                    >
+                        {size}
+                    </button>
+                ))}
+            </div>
+
+            <button
+            onClick={onGoToShop}
+            className="bg-pink-500 hover:bg-pink-600 text-white rounded-full p-4 shadow-lg transform hover:scale-110 transition-transform duration-200"
+            aria-label="Open Shop"
+            >
+            <ShopIcon className="w-8 h-8"/>
+            </button>
+        </div>
       </div>
       
       <button

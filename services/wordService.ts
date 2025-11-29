@@ -86,9 +86,10 @@ export const wordService = {
         saveToStorage(LESSONS_KEY, lessons);
     },
 
-    getDailyTestWords: (lessonIds: string[]): Word[] => {
-        const TEST_SIZE = 5;
-        const MISTAKE_COUNT = 2; // Prioritize up to 2 mistakes
+    getDailyTestWords: (lessonIds: string[], count: number = 5): Word[] => {
+        const testSizeTarget = count;
+        // Aim for around 40% revision words, but at least 1 if possible.
+        const MISTAKE_COUNT = Math.max(1, Math.floor(testSizeTarget * 0.4));
 
         const allLessons = wordService.getAllLessons();
         const selectedLessons = allLessons.filter(lesson => lessonIds.includes(lesson.id));
@@ -96,7 +97,7 @@ export const wordService = {
 
         if (wordPool.length === 0) return [];
         
-        const testSize = Math.min(TEST_SIZE, wordPool.length);
+        const actualTestSize = Math.min(testSizeTarget, wordPool.length);
 
         const mistakes = getFromStorage<Record<string, number>>(MISTAKES_KEY, {});
         
@@ -113,7 +114,7 @@ export const wordService = {
         const shuffledOtherWords = shuffleArray(otherWords);
 
         // Fill the rest of the test with other words
-        const remainingCount = testSize - revisionMistakes.length;
+        const remainingCount = actualTestSize - revisionMistakes.length;
         const randomWords = shuffledOtherWords.slice(0, remainingCount);
         
         // Combine and shuffle for the final test list
@@ -179,7 +180,7 @@ export const wordService = {
             .slice(0, count);
     },
 
-    getMistakeWordsForTest: (): Word[] => {
+    getMistakeWordsForTest: (count: number = 5): Word[] => {
         const mistakes = getFromStorage<Record<string, number>>(MISTAKES_KEY, {});
         const mistakeIds = Object.keys(mistakes);
         if (mistakeIds.length === 0) return [];
@@ -188,7 +189,8 @@ export const wordService = {
         
         const mistakeWords = allWords.filter(word => mistakeIds.includes(word.id));
         
-        return shuffleArray(mistakeWords);
+        const shuffled = shuffleArray(mistakeWords);
+        return shuffled.slice(0, count);
     },
 
     saveLesson: (lessonName: string, wordsText: string, lessonIdToUpdate?: string): { success: boolean, message: string } => {
