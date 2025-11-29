@@ -5,7 +5,7 @@ import ResultsScreen from './components/ResultsScreen';
 import ImportScreen from './components/ImportScreen';
 import TestLessonSelectionModal from './components/TestLessonSelectionModal';
 import ShopScreen from './components/ShopScreen';
-import { TestResult, HistoricalScore, Word, Lesson, Background } from './types';
+import { TestResult, HistoricalScore, Word, Lesson, Background, EvaluationState } from './types';
 import useLocalStorage from './hooks/useLocalStorage';
 import { wordService } from './services/wordService';
 import { backgrounds, defaultBackground } from './data/backgrounds';
@@ -20,6 +20,7 @@ const App: React.FC = () => {
   const [historicalScores, setHistoricalScores] = useLocalStorage<HistoricalScore[]>('historicalScores', []);
   const [topMistakes, setTopMistakes] = useState<(Word & { mistakeCount: number })[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [lessonStatusMap, setLessonStatusMap] = useState<Record<string, EvaluationState>>({});
   const [isLessonSelectionOpen, setLessonSelectionOpen] = useState(false);
   const [lessonToEdit, setLessonToEdit] = useState<Lesson | null>(null);
   
@@ -39,6 +40,7 @@ const App: React.FC = () => {
     const allLessons = wordService.getAllLessons();
     setLessons(allLessons);
     setTopMistakes(wordService.getTopMistakes(1000)); // Display up to 1000 mistakes on home
+    setLessonStatusMap(wordService.getAllLessonStates());
   }, []);
   
   useEffect(() => {
@@ -116,6 +118,11 @@ const App: React.FC = () => {
     wordService.saveTestResults(results);
     setScreenTime(prevTime => prevTime + correctAnswers);
     
+    // Save stats specifically if it was a single lesson test
+    if (lastTestConfig?.type === 'lessons' && lastTestConfig.ids.length === 1) {
+        wordService.saveLessonStats(lastTestConfig.ids[0], correctAnswers, results.length);
+    }
+
     let lessonNames: string[] = [];
     if (lastTestConfig?.type === 'lessons') {
         lessonNames = lessons
@@ -200,6 +207,7 @@ const App: React.FC = () => {
                         historicalScores={historicalScores} 
                         topMistakes={topMistakes}
                         lessons={lessons}
+                        lessonStatusMap={lessonStatusMap}
                         onEditLesson={handleEditLesson}
                         onDeleteLesson={handleDeleteLesson}
                         onGoToShop={goToShop}
@@ -232,6 +240,7 @@ const App: React.FC = () => {
                         historicalScores={historicalScores} 
                         topMistakes={topMistakes}
                         lessons={lessons}
+                        lessonStatusMap={lessonStatusMap}
                         onEditLesson={handleEditLesson}
                         onDeleteLesson={handleDeleteLesson}
                         onGoToShop={goToShop}

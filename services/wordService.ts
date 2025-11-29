@@ -1,4 +1,4 @@
-import { Word, TestResult, Lesson } from '../types';
+import { Word, TestResult, Lesson, EvaluationState } from '../types';
 import { p1Lessons } from '../data/p1Lessons';
 import { p2Lessons } from '../data/p2Lessons';
 import { p3Lessons } from '../data/p3Lessons';
@@ -18,6 +18,13 @@ const LESSONS_KEY = 'lessons';
 const MISTAKES_KEY = 'mistakes'; // Stored as Record<string, number> { wordId: count }
 const SEEN_WORDS_KEY = 'seenWords';
 const LAST_WORD_ID_KEY = 'lastWordId';
+const LESSON_STATS_KEY = 'lessonStats';
+
+interface LessonTestRecord {
+    timestamp: number;
+    score: number;
+    total: number;
+}
 
 const PREDEFINED_LESSONS: Lesson[] = [...p1Lessons, ...p2Lessons, ...p3Lessons, ...p4Lessons];
 
@@ -182,15 +189,23 @@ export const wordService = {
 
     getMistakeWordsForTest: (count: number = 5): Word[] => {
         const mistakes = getFromStorage<Record<string, number>>(MISTAKES_KEY, {});
-        const mistakeIds = Object.keys(mistakes);
-        if (mistakeIds.length === 0) return [];
+        // Prioritize words with higher mistake counts
+        const mistakeEntries = Object.entries(mistakes).sort(([, a], [, b]) => b - a);
+        
+        const topMistakeIds = mistakeEntries.map(([id]) => id);
+        
+        if (topMistakeIds.length === 0) return [];
         
         const allWords = getAllWordsFromLessons(wordService.getAllLessons());
+        const wordMap = new Map(allWords.map(w => [w.id, w]));
         
-        const mistakeWords = allWords.filter(word => mistakeIds.includes(word.id));
-        
-        const shuffled = shuffleArray(mistakeWords);
-        return shuffled.slice(0, count);
+        // Take top N mistakes first, then shuffle them for the test
+        const topMistakeWords = topMistakeIds
+            .slice(0, count)
+            .map(id => wordMap.get(id))
+            .filter((w): w is Word => w !== undefined);
+
+        return shuffleArray(topMistakeWords);
     },
 
     saveLesson: (lessonName: string, wordsText: string, lessonIdToUpdate?: string): { success: boolean, message: string } => {
@@ -340,5 +355,67 @@ export const wordService = {
         if(overwrittenCount > 0) messageParts.push(`Successfully overwrote ${overwrittenCount} lesson(s).`);
     
         return { success: true, message: messageParts.join(' ') };
+    },
+
+    // --- Statistics and Evaluation Status ---
+
+    saveLessonStats: (lessonId: string, score: number, total: number) => {
+        const stats = getFromStorage<Record<string, LessonTestRecord[]>>(LESSON_STATS_KEY, {});
+        if (!stats[lessonId]) stats[lessonId] = [];
+        
+        // Add new record to the beginning
+        stats[lessonId].unshift({
+            timestamp: Date.now(),
+            score,
+            total
+        });
+        
+        // Keep only recent history to save space, but enough for calculation (20 is safe)
+        if (stats[lessonId].length > 20) {
+            stats[lessonId] = stats[lessonId].slice(0, 20);
+        }
+        
+        saveToStorage(LESSON_STATS_KEY, stats);
+    },
+
+    getLessonEvaluationState: (lessonId: string): EvaluationState => {
+        const stats = getFromStorage<Record<string, LessonTestRecord[]>>(LESSON_STATS_KEY, {});
+        const history = stats[lessonId] || [];
+        
+        if (history.length === 0) return 'not_started';
+        
+        // Helper to calculate average percentage over the last N tests
+        const getAveragePercentage = (n: number) => {
+            if (history.length < n) return -1; // Not enough data
+            const recent = history.slice(0, n);
+            const sumPercentage = recent.reduce((acc, curr) => {
+                const percentage = curr.total === 0 ? 0 : (curr.score / curr.total) * 100;
+                return acc + percentage;
+            }, 0);
+            return sumPercentage / n;
+        };
+
+        // 1) Expert: average of 95% correct over the last 5 tests
+        const avg5 = getAveragePercentage(5);
+        if (avg5 >= 95) return 'expert';
+
+        // 2) Competent: average of 80% correct over the last 5 tests
+        if (avg5 >= 80) return 'competent';
+
+        // 3) Learning: average of 50% correct over the last 3 tests
+        const avg3 = getAveragePercentage(3);
+        if (avg3 >= 50) return 'learning';
+
+        // 4) Beginner: user has played the test lesson at least once (implied if history > 0)
+        return 'beginner';
+    },
+
+    getAllLessonStates: (): Record<string, EvaluationState> => {
+        const lessons = wordService.getAllLessons();
+        const stateMap: Record<string, EvaluationState> = {};
+        lessons.forEach(lesson => {
+            stateMap[lesson.id] = wordService.getLessonEvaluationState(lesson.id);
+        });
+        return stateMap;
     }
 };

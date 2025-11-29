@@ -5,9 +5,13 @@ import { PencilIcon } from './icons/PencilIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { ShopIcon } from './icons/ShopIcon';
-import { HistoricalScore, Word, Lesson } from '../types';
+import { HistoricalScore, Word, Lesson, EvaluationState } from '../types';
 import { wordService } from '../services/wordService';
 import { PlayIcon } from './icons/PlayIcon';
+import { TrophyIcon } from './icons/TrophyIcon';
+import { MedalIcon } from './icons/MedalIcon';
+import { LeafIcon } from './icons/LeafIcon';
+import { FootprintIcon } from './icons/FootprintIcon';
 
 interface HomeScreenProps {
   onStartTestRequest: () => void;
@@ -17,6 +21,7 @@ interface HomeScreenProps {
   historicalScores: HistoricalScore[];
   topMistakes: (Word & { mistakeCount: number })[];
   lessons: Lesson[];
+  lessonStatusMap: Record<string, EvaluationState>;
   onEditLesson: (lesson: Lesson) => void;
   onDeleteLesson: (lessonId: string) => void;
   onStartSingleLessonTest: (lessonId: string) => void;
@@ -41,6 +46,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     historicalScores, 
     topMistakes, 
     lessons, 
+    lessonStatusMap,
     onEditLesson, 
     onDeleteLesson, 
     onStartSingleLessonTest, 
@@ -57,6 +63,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     return lessons.filter(l => l.level === activeTab);
   }, [activeTab, lessons]);
 
+  const renderStatusIcon = (lessonId: string) => {
+      const status = lessonStatusMap[lessonId];
+      switch(status) {
+          case 'expert':
+              return <TrophyIcon className="w-5 h-5 text-yellow-500" aria-label="Expert status" />;
+          case 'competent':
+              return <MedalIcon className="w-5 h-5 text-blue-400" aria-label="Competent status" />;
+          case 'learning':
+              return <LeafIcon className="w-5 h-5 text-green-500" aria-label="Learning status" />;
+          case 'beginner':
+              return <FootprintIcon className="w-5 h-5 text-gray-400" aria-label="Beginner status" />;
+          default:
+              return null; // Not started - no icon
+      }
+  };
   
   const handleExport = () => {
     const allLessons = wordService.getCustomLessons();
@@ -79,7 +100,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   
   return (
     <div className="relative text-center flex flex-col items-center justify-center h-full space-y-6">
-      <span className="absolute top-0 right-0 text-xs text-gray-400 p-2">v0.4</span>
+      <span className="absolute top-0 right-0 text-xs text-gray-400 p-2">v0.5</span>
       <div>
         <h1 className="text-4xl md:text-5xl font-bold text-blue-600">拼音天天练</h1>
         <p className="text-lg text-gray-600">Pinyin Daily Practice</p>
@@ -150,8 +171,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
                 {lessonsToDisplay.map(lesson => (
                     <div key={lesson.id} className="flex justify-between items-center p-2 bg-white rounded-lg border">
-                    <span className="font-semibold text-gray-800 truncate" title={lesson.name}>{lesson.name} ({lesson.words.length} words)</span>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                         <div className="flex-shrink-0 w-6 flex justify-center">
+                            {renderStatusIcon(lesson.id)}
+                         </div>
+                         <span className="font-semibold text-gray-800 truncate" title={lesson.name}>{lesson.name}</span>
+                         <span className="text-gray-400 text-sm">({lesson.words.length})</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 flex-shrink-0">
                         {activeTab === 'my' && (
                             <>
                                 <button onClick={() => onEditLesson(lesson)} className="p-2 text-blue-500 hover:text-blue-700" aria-label={`Edit ${lesson.name}`}>

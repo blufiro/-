@@ -35,6 +35,7 @@ export interface Background {
   style: React.CSSProperties;
 }
 
+export type EvaluationState = 'expert' | 'competent' | 'learning' | 'beginner' | 'not_started';
 
 // Keep a simple enum for different views/screens in the app
 export enum AppView {
